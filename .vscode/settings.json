@@ -1,0 +1,15 @@
+{
+    "files.exclude": {
+        "node_modules": true,
+        ".gitignore": true,
+        ".eslintrc*": true,
+        "package*": true,
+        "tsconfig*": true,
+        "nest-cli*": true,
+        "README.md": true,
+        "dist": true,
+        "test": true,
+        ".prettier*": true,
+
+    }
+}
