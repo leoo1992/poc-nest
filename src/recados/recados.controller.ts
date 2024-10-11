@@ -1,7 +1,9 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 
 @Controller('recados')
-export class RecadosController {
+export class RecadosController
+{
+  @HttpCode(HttpStatus.OK)
   @Get()
   findAll() {
     return 'all';
@@ -15,9 +17,18 @@ export class RecadosController {
   }
 
   @Post()
-  create( )
+  create(@Body() body:any )
   {
-    return `create`;
+    return body;
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body:any )
+  {
+    return {
+      id,
+      ...body
+    };
   }
 
 }
