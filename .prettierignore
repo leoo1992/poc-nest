@@ -1,0 +1,5 @@
+*.json
+*.md
+*.gitignore
+*.prettierignore
+*.prettierrc
