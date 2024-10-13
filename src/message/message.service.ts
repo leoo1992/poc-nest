@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { MessageEntity } from './entities/message.entity';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
 export class MessageService {
@@ -22,16 +24,21 @@ export class MessageService {
   findOneMsgById(id: string) {
     const parseId = +id - 1;
 
-    if (this.messages[parseId]) return this.messages[parseId];
-    return `Error to find msg by id ${id}`;
+    if (this.messages[parseId]) {
+      return this.messages[parseId];
+    } else {
+      throw new NotFoundException(`Error to find msg by id ${id}`);
+    }
   }
 
-  createNewMsg(body: any) {
+  createNewMsg(createDto: CreateMessageDto) {
     this.lastId++;
-    const id = this.lastId;
+    const id = this.lastId.toString();
     const newMsg = {
       id,
-      ...body,
+      ...createDto,
+      read: false,
+      date: new Date(),
     };
 
     this.messages.push(newMsg);
@@ -39,26 +46,36 @@ export class MessageService {
     return `Created new msg ${JSON.stringify(newMsg)}`;
   }
 
-  updateMsgById(id: string, body: any) {
-    const existMsgIndex = this.messages.findIndex(item => +item.id === +id);
+  updateMsgById(id: string, updateDto: UpdateMessageDto) {
+    const existMsgIndex = this.findMsgIndex(id);
+    const existMsg = this.messages[existMsgIndex];
 
-    if (existMsgIndex >= 0) {
-      const existMsg = this.messages[existMsgIndex];
+    this.idNotFoundExeption(existMsgIndex, id);
 
-      this.messages[existMsgIndex] = {
-        ...existMsg,
-        ...body,
-      };
-    }
+    this.messages[existMsgIndex] = {
+      ...existMsg,
+      ...updateDto,
+    };
 
     return `Updated msg by id ${id}`;
   }
 
   deleteMsgById(id: string) {
-    const existMsgIndex = this.messages.findIndex(item => +item.id === +id);
+    const existMsgIndex = this.findMsgIndex(id);
 
-    if (existMsgIndex >= 0) this.messages.splice(existMsgIndex, 1);
+    this.idNotFoundExeption(existMsgIndex, id);
+    this.messages.splice(existMsgIndex, 1);
 
     return `Deleted msg by id ${id}`;
+  }
+
+  //HELPERS
+  findMsgIndex(id: string) {
+    return this.messages.findIndex(item => +item.id === +id);
+  }
+
+  idNotFoundExeption(existMsgIndex: number, id: string) {
+    if (existMsgIndex < 0)
+      throw new NotFoundException(`Error to find msg by id ${id}`);
   }
 }
