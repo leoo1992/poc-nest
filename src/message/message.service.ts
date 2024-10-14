@@ -21,11 +21,11 @@ export class MessageService {
     return this.messages;
   }
 
-  findOneMsgById(id: string) {
-    const parseId = +id - 1;
+  findOneMsgById(id: number) {
+    const realID = id - 1;
 
-    if (this.messages[parseId]) {
-      return this.messages[parseId];
+    if (this.messages[realID]) {
+      return this.messages[realID];
     } else {
       throw new NotFoundException(`Error to find msg by id ${id}`);
     }
@@ -46,7 +46,7 @@ export class MessageService {
     return `Created new msg ${JSON.stringify(newMsg)}`;
   }
 
-  updateMsgById(id: string, updateDto: UpdateMessageDto) {
+  updateMsgById(id: number, updateDto: UpdateMessageDto) {
     const existMsgIndex = this.findMsgIndex(id);
     const existMsg = this.messages[existMsgIndex];
 
@@ -60,7 +60,7 @@ export class MessageService {
     return `Updated msg by id ${id}`;
   }
 
-  deleteMsgById(id: string) {
+  deleteMsgById(id: number) {
     const existMsgIndex = this.findMsgIndex(id);
 
     this.idNotFoundExeption(existMsgIndex, id);
@@ -70,11 +70,11 @@ export class MessageService {
   }
 
   //HELPERS
-  findMsgIndex(id: string) {
-    return this.messages.findIndex(item => +item.id === +id);
+  findMsgIndex(id: number) {
+    return this.messages.findIndex(item => +item.id === id);
   }
 
-  idNotFoundExeption(existMsgIndex: number, id: string) {
+  idNotFoundExeption(existMsgIndex: number, id: number) {
     if (existMsgIndex < 0)
       throw new NotFoundException(`Error to find msg by id ${id}`);
   }
