@@ -1,81 +1,72 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MessageEntity } from './entities/message.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import idNotFoundExeption from './helpers/idNotFoundExeption';
 @Injectable()
 export class MessageService {
-  private lastId = 1;
-  private messages: MessageEntity[] = [
-    {
-      id: '1',
-      text: 'test',
-      from: 'Léo',
-      to: 'Tester',
-      read: false,
-      date: new Date(),
-    },
-  ];
+  constructor(
+    @InjectRepository(MessageEntity)
+    private readonly messageRepository: Repository<MessageEntity>,
+  ) {}
 
-  findAllMsg(limit: number, offset: number) {
-    return this.messages;
+  async findAllMsg(limit: number, offset: number) {
+    const messagesPromise = await this.messageRepository.find();
+
+    if (messagesPromise.length === 0) return 'No have data';
+    return messagesPromise;
   }
 
-  findOneMsgById(id: number) {
-    const realID = id - 1;
+  async findOneMsgById(id: number) {
+    const messagePromise = await this.messageRepository.findOneBy({
+      id,
+    });
 
-    if (this.messages[realID]) {
-      return this.messages[realID];
+    if (messagePromise) {
+      return messagePromise;
     } else {
-      throw new NotFoundException(`Error to find msg by id ${id}`);
+      idNotFoundExeption(-1, id);
     }
   }
 
-  createNewMsg(createDto: CreateMessageDto) {
-    this.lastId++;
-    const id = this.lastId.toString();
+  async createNewMsg(createDto: CreateMessageDto) {
     const newMsg = {
-      id,
       ...createDto,
       read: false,
       date: new Date(),
     };
+    const messagePromise = this.messageRepository.create(newMsg);
 
-    this.messages.push(newMsg);
-
-    return `Created new msg ${JSON.stringify(newMsg)}`;
+    return await this.messageRepository.save(messagePromise);
   }
 
-  updateMsgById(id: number, updateDto: UpdateMessageDto) {
-    const existMsgIndex = this.findMsgIndex(id);
-    const existMsg = this.messages[existMsgIndex];
-
-    this.idNotFoundExeption(existMsgIndex, id);
-
-    this.messages[existMsgIndex] = {
-      ...existMsg,
-      ...updateDto,
+  async updateMsgById(id: number, updateDto: UpdateMessageDto) {
+    const partialDto = {
+      read: updateDto?.read,
+      text: updateDto?.text,
     };
+    const messagePromise = await this.messageRepository.preload({
+      id,
+      ...partialDto,
+    });
 
-    return `Updated msg by id ${id}`;
+    if (!messagePromise) {
+      idNotFoundExeption(-1, id);
+    }
+    return await this.messageRepository.save(messagePromise);
   }
 
-  deleteMsgById(id: number) {
-    const existMsgIndex = this.findMsgIndex(id);
+  async deleteMsgById(id: number) {
+    const messagePromise = await this.messageRepository.findOneBy({
+      id,
+    });
 
-    this.idNotFoundExeption(existMsgIndex, id);
-    this.messages.splice(existMsgIndex, 1);
+    if (!messagePromise) {
+      idNotFoundExeption(-1, id);
+    }
 
-    return `Deleted msg by id ${id}`;
-  }
-
-  //HELPERS
-  findMsgIndex(id: number) {
-    return this.messages.findIndex(item => +item.id === id);
-  }
-
-  idNotFoundExeption(existMsgIndex: number, id: number) {
-    if (existMsgIndex < 0)
-      throw new NotFoundException(`Error to find msg by id ${id}`);
+    return this.messageRepository.remove(messagePromise);
   }
 }
