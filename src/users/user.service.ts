@@ -4,7 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
-
+import idNotFoundExeption from 'src/helpers/idNotFoundExeption';
 @Injectable()
 export class UserService {
   constructor(
@@ -20,6 +20,7 @@ export class UserService {
         email: createUserDto.email,
       };
       const newUserPromise = this.userRepository.create(newUser);
+
       return await this.userRepository.save(newUserPromise);
     } catch (e) {
       if (e.code === '23505') {
@@ -31,18 +32,51 @@ export class UserService {
   }
 
   async findAll() {
-    return `This action returns all user`;
+    const users = await this.userRepository.find({
+      order: {
+        id: 'desc',
+      },
+    });
+
+    return users;
   }
 
   async findOne(id: number) {
-    return `This action returns a #${id} user`;
+    const user = await this.userRepository.findOneBy({
+      id,
+    });
+
+    if (user) {
+      return user;
+    } else {
+      idNotFoundExeption(user, id);
+    }
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    const partialDto = {
+      name: updateUserDto?.name,
+      passwordHash: updateUserDto?.password,
+    };
+    const updateUserPromise = await this.userRepository.preload({
+      id,
+      ...partialDto,
+    });
+
+    if (!updateUserPromise) {
+      idNotFoundExeption(updateUserPromise, id);
+    }
+
+    return await this.userRepository.save(updateUserPromise);
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} user`;
+    const user = await this.userRepository.findOneBy({
+      id,
+    });
+
+    if (!user) idNotFoundExeption(user, id);
+
+    return await this.userRepository.remove(user);
   }
 }

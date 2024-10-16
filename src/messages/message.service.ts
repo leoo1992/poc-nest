@@ -4,7 +4,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import idNotFoundExeption from './helpers/idNotFoundExeption';
+import idNotFoundExeption from '../helpers/idNotFoundExeption';
 @Injectable()
 export class MessageService {
   constructor(
@@ -27,7 +27,7 @@ export class MessageService {
     if (messagePromise) {
       return messagePromise;
     } else {
-      idNotFoundExeption(-1, id);
+      idNotFoundExeption(messagePromise, id);
     }
   }
 
@@ -53,7 +53,7 @@ export class MessageService {
     });
 
     if (!messagePromise) {
-      idNotFoundExeption(-1, id);
+      idNotFoundExeption(messagePromise, id);
     }
     return await this.messageRepository.save(messagePromise);
   }
@@ -64,9 +64,9 @@ export class MessageService {
     });
 
     if (!messagePromise) {
-      idNotFoundExeption(-1, id);
+      idNotFoundExeption(messagePromise, id);
     }
 
-    return this.messageRepository.remove(messagePromise);
+    return await this.messageRepository.remove(messagePromise);
   }
 }
