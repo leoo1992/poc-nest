@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MessageModule } from '../message/message.module';
+import { MessageModule } from '../messages/message.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from 'src/users/user.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: true, //remove in production
     }),
     MessageModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
