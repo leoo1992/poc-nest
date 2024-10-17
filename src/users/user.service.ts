@@ -5,12 +5,40 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
 import idNotFoundExeption from 'src/helpers/idNotFoundExeption';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
   ) {}
+
+  async findAll(paginationDto?: PaginationDto) {
+    const { limit = 10, offset = 0 } = paginationDto;
+
+    const users = await this.userRepository.find({
+      take: limit,
+      skip: offset,
+      order: {
+        id: 'asc',
+      },
+    });
+
+    return users;
+  }
+
+  async findOne(id: number) {
+    const user = await this.userRepository.findOneBy({
+      id,
+    });
+
+    if (user) {
+      return user;
+    } else {
+      idNotFoundExeption(user, id);
+    }
+  }
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -28,28 +56,6 @@ export class UserService {
       }
 
       throw e;
-    }
-  }
-
-  async findAll() {
-    const users = await this.userRepository.find({
-      order: {
-        id: 'desc',
-      },
-    });
-
-    return users;
-  }
-
-  async findOne(id: number) {
-    const user = await this.userRepository.findOneBy({
-      id,
-    });
-
-    if (user) {
-      return user;
-    } else {
-      idNotFoundExeption(user, id);
     }
   }
 
